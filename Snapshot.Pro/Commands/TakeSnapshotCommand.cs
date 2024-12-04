@@ -22,11 +22,6 @@ internal sealed class TakeSnapshotCommand : BaseCommand<TakeSnapshotCommand> {
         var document = documentView.Document;
         var view = documentView.TextView;
 
-        //if (docView?.TextView == null) return;
-        //var position = docView.TextView.Caret.Position.BufferPosition;
-        //docView.TextBuffer?.Insert( position, Guid.NewGuid().ToString() );
-        //await VS.MessageBox.ShowWarningAsync( "Snapshot.Pro", "Button clicked" );
-
         try {
             var path = $"D:/Snapshots/{DateTime.UtcNow.Ticks}-{Path.GetFileNameWithoutExtension( document.FilePath ).Replace( ".", "_" )}.gif";
             TakeSnapshot( path, view );
