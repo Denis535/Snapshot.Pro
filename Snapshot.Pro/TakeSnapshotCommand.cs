@@ -27,7 +27,7 @@ internal sealed class TakeSnapshotCommand : BaseCommand<TakeSnapshotCommand> {
             TakeSnapshot( path, view );
             await VS.MessageBox.ShowAsync( "Snapshot.Pro", $"Snapshot was saved: {path}" );
         } catch (Exception ex) {
-            await VS.MessageBox.ShowErrorAsync( "Snapshot.Pro", $"Can not save snapshot: {ex.Message}" );
+            await VS.MessageBox.ShowErrorAsync( "Snapshot.Pro", ex.Message );
         }
     }
 

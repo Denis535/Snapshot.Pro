@@ -12,7 +12,7 @@ using Community.VisualStudio.Toolkit;
 [InstalledProductRegistration( Vsix.Name, Vsix.Description, Vsix.Version )]
 [ProvideMenuResource( "Menus.ctmenu", 1 )]
 [Guid( PackageGuids.SnapshotProString )]
-public sealed class SnapshotProPackage : ToolkitPackage {
+public sealed class Package : ToolkitPackage {
 
     protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress) {
         await this.RegisterCommandsAsync();
