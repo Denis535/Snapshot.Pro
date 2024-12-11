@@ -66,42 +66,43 @@ internal class TakeSnapshotCommand : Microsoft.VisualStudio.Extensibility.Comman
 
             var wpfTextViewHost = editorAdaptersFactoryService.GetWpfTextViewHost( activeTextView ) ?? throw new NullReferenceException( "IWpfTextViewHost is null" );
             var wpfTextView = wpfTextViewHost.TextView ?? throw new NullReferenceException( "IwpfTextView is null" );
+            var wpfTextViewMargin = wpfTextViewHost.GetTextViewMargin( PredefinedMarginNames.LineNumber ) ?? throw new NullReferenceException( "IWpfTextViewMargin is null" );
 
             var path = $"D:/Snapshots/{DateTime.UtcNow.Ticks}-{Path.GetFileNameWithoutExtension( textViewSnapshot.FilePath ).Replace( ".", "_" )}.gif";
-            TakeSnapshot( path, wpfTextView );
+            TakeSnapshot( path, wpfTextView, wpfTextViewMargin );
             await Extensibility.Shell().ShowPromptAsync( $"Snapshot was saved: " + path, PromptOptions.OK, cancellationToken );
         } catch (Exception ex) {
             Logger.TraceInformation( "Can not save snapshot: " + ex );
         }
     }
 
-    private static void TakeSnapshot(string path, IWpfTextView view) {
+    private static void TakeSnapshot(string path, IWpfTextView view, IWpfTextViewMargin margin) {
         ThreadHelper.ThrowIfNotOnUIThread();
         Directory.CreateDirectory( Path.GetDirectoryName( path ) );
         using (var stream = File.Create( path )) {
             var encoder = new GifBitmapEncoder();
-            TakeSnapshot( encoder, view );
+            TakeSnapshot( encoder, view, margin );
             encoder.Save( stream );
         }
     }
-    private static void TakeSnapshot(BitmapEncoder encoder, IWpfTextView view) {
+    private static void TakeSnapshot(BitmapEncoder encoder, IWpfTextView view, IWpfTextViewMargin margin) {
         ThreadHelper.ThrowIfNotOnUIThread();
         var element = GetRoot( view.VisualElement );
         {
             view.ViewportLeft = 0;
             view.DisplayTextLineContainingBufferPosition( new SnapshotPoint( view.TextSnapshot, 0 ), 0, ViewRelativePosition.Top );
             view.Caret.MoveTo( new SnapshotPoint( view.TextSnapshot, 0 ), PositionAffinity.Predecessor );
-            element.UpdateLayout();
-            TakeSnapshot2( encoder, element );
+            TakeSnapshot2( encoder, view, margin, element );
         }
         while (view.TextViewLines.LastVisibleLine.End.Position < view.TextSnapshot.Length) {
-            view.ViewScroller.ScrollViewportVerticallyByPixels( -20 );
-            element.UpdateLayout();
-            TakeSnapshot2( encoder, element );
+            view.ViewScroller.ScrollViewportVerticallyByPixels( -10 );
+            TakeSnapshot2( encoder, view, margin, element );
         }
     }
-    private static void TakeSnapshot2(BitmapEncoder encoder, FrameworkElement element) {
+    private static void TakeSnapshot2(BitmapEncoder encoder, IWpfTextView view, IWpfTextViewMargin margin, FrameworkElement element) {
         ThreadHelper.ThrowIfNotOnUIThread();
+        view.VisualElement.UpdateLayout();
+        UpdateLineNumbers( margin );
         var renderTargetBitmap = new RenderTargetBitmap( (int) element.ActualWidth, (int) element.ActualHeight, 96, 96, PixelFormats.Pbgra32 );
         renderTargetBitmap.Render( element );
         encoder.Frames.Add( BitmapFrame.Create( renderTargetBitmap ) );
@@ -112,6 +113,12 @@ internal class TakeSnapshotCommand : Microsoft.VisualStudio.Extensibility.Comman
             element = (FrameworkElement) element.GetVisualOrLogicalParent();
         }
         return element;
+    }
+
+    // Helpers
+    private static void UpdateLineNumbers(IWpfTextViewMargin margin) {
+        var method = margin.GetType().GetMethod( "UpdateLineNumbers", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic );
+        method.Invoke( margin, [] );
     }
 
 }
