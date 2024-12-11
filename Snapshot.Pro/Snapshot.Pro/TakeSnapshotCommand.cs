@@ -55,20 +55,24 @@ internal class TakeSnapshotCommand : Microsoft.VisualStudio.Extensibility.Comman
 
     public override async Task ExecuteCommandAsync(IClientContext context, CancellationToken cancellationToken) {
         await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
-        var textViewSnapshot = await context.GetActiveTextViewAsync( cancellationToken ) ?? throw new NullReferenceException( "ITextViewSnapshot is null" );
-        //var textDocumentSnapshot = view.Document ?? throw new NullReferenceException( "ITextDocumentSnapshot is null" );
+        try {
+            var textViewSnapshot = await context.GetActiveTextViewAsync( cancellationToken ) ?? throw new NullReferenceException( "ITextViewSnapshot is null" );
+            //var textDocumentSnapshot = view.Document ?? throw new NullReferenceException( "ITextDocumentSnapshot is null" );
 
-        var editorAdaptersFactoryService = await EditorAdaptersFactoryService.GetServiceAsync();
+            var editorAdaptersFactoryService = await EditorAdaptersFactoryService.GetServiceAsync();
 
-        var textManager = await TextManager.GetServiceAsync();
-        ErrorHandler.ThrowOnFailure( textManager.GetActiveView( 1, null, out var activeTextView ) );
+            var textManager = await TextManager.GetServiceAsync();
+            ErrorHandler.ThrowOnFailure( textManager.GetActiveView( 1, null, out var activeTextView ) );
 
-        var wpfTextViewHost = editorAdaptersFactoryService.GetWpfTextViewHost( activeTextView ) ?? throw new NullReferenceException( "IWpfTextViewHost is null" );
-        var wpfTextView = wpfTextViewHost.TextView ?? throw new NullReferenceException( "IwpfTextView is null" );
+            var wpfTextViewHost = editorAdaptersFactoryService.GetWpfTextViewHost( activeTextView ) ?? throw new NullReferenceException( "IWpfTextViewHost is null" );
+            var wpfTextView = wpfTextViewHost.TextView ?? throw new NullReferenceException( "IwpfTextView is null" );
 
-        var path = $"D:/Snapshots/{DateTime.UtcNow.Ticks}-{Path.GetFileNameWithoutExtension( textViewSnapshot.FilePath ).Replace( ".", "_" )}.gif";
-        TakeSnapshot( path, wpfTextView );
-        await Extensibility.Shell().ShowPromptAsync( $"Snapshot was saved: {path}", PromptOptions.OK, cancellationToken );
+            var path = $"D:/Snapshots/{DateTime.UtcNow.Ticks}-{Path.GetFileNameWithoutExtension( textViewSnapshot.FilePath ).Replace( ".", "_" )}.gif";
+            TakeSnapshot( path, wpfTextView );
+            await Extensibility.Shell().ShowPromptAsync( $"Snapshot was saved: " + path, PromptOptions.OK, cancellationToken );
+        } catch (Exception ex) {
+            Logger.TraceInformation( "Can not save snapshot: " + ex );
+        }
     }
 
     private static void TakeSnapshot(string path, IWpfTextView view) {
@@ -91,7 +95,7 @@ internal class TakeSnapshotCommand : Microsoft.VisualStudio.Extensibility.Comman
             TakeSnapshot2( encoder, element );
         }
         while (view.TextViewLines.LastVisibleLine.End.Position < view.TextSnapshot.Length) {
-            view.ViewScroller.ScrollViewportVerticallyByPixels( -50 );
+            view.ViewScroller.ScrollViewportVerticallyByPixels( -20 );
             element.UpdateLayout();
             TakeSnapshot2( encoder, element );
         }
