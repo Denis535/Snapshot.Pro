@@ -69,7 +69,8 @@ public class TakeSnapshotCommand : Microsoft.VisualStudio.Extensibility.Commands
             var wpfTextViewMargin = wpfTextViewHost.GetTextViewMargin( PredefinedMarginNames.LineNumber ) ?? throw new NullReferenceException( "IWpfTextViewMargin is null" );
 
             var path = $"D:/Snapshots/{DateTime.UtcNow.Ticks}-{Path.GetFileNameWithoutExtension( textViewSnapshot.FilePath ).Replace( ".", "_" )}.h264";
-            TakeSnapshot( path, wpfTextView, wpfTextViewMargin );
+            var element = GetRoot( wpfTextView.VisualElement );
+            TakeSnapshot( path, element, wpfTextView, wpfTextViewMargin );
             Debug.WriteLine( $"Snapshot was saved: " + path );
             await Extensibility.Shell().ShowPromptAsync( $"Snapshot was saved: " + path, PromptOptions.OK, cancellationToken );
         } catch (Exception ex) {
@@ -78,38 +79,36 @@ public class TakeSnapshotCommand : Microsoft.VisualStudio.Extensibility.Commands
         }
     }
 
-    private static void TakeSnapshot(string path, IWpfTextView view, IWpfTextViewMargin margin) {
+    private static void TakeSnapshot(string path, FrameworkElement element, IWpfTextView view, IWpfTextViewMargin margin) {
         ThreadHelper.ThrowIfNotOnUIThread();
         Directory.CreateDirectory( Path.GetDirectoryName( path ) );
         using (var stream = File.Create( path )) {
-            using (var encoder = new VideoEncoder( stream, 60, 1920, 1080 )) {
-                TakeSnapshot( encoder, view, margin );
+            using (var encoder = new VideoEncoder( stream, (int) element.ActualWidth, (int) element.ActualHeight, 60 )) {
+                TakeSnapshot( encoder, element, view, margin );
                 encoder.Flush();
             }
             stream.Flush();
         }
     }
-    private static void TakeSnapshot(VideoEncoder encoder, IWpfTextView view, IWpfTextViewMargin margin) {
+    private static void TakeSnapshot(VideoEncoder encoder, FrameworkElement element, IWpfTextView view, IWpfTextViewMargin margin) {
         ThreadHelper.ThrowIfNotOnUIThread();
-        var element = GetRoot( view.VisualElement );
+        var bitmap = new RenderTargetBitmap( (int) element.ActualWidth, (int) element.ActualHeight, 96, 96, PixelFormats.Pbgra32 );
         {
             view.ViewportLeft = 0;
             view.DisplayTextLineContainingBufferPosition( new SnapshotPoint( view.TextSnapshot, 0 ), 0, ViewRelativePosition.Top );
             view.Caret.MoveTo( new SnapshotPoint( view.TextSnapshot, 0 ), PositionAffinity.Predecessor );
-            TakeSnapshot2( encoder, view, margin, element );
+            view.VisualElement.UpdateLayout();
+            UpdateLineNumbers( margin );
+            bitmap.Render( element );
+            encoder.Add( bitmap );
         }
         while (view.TextViewLines.LastVisibleLine.End.Position < view.TextSnapshot.Length) {
             view.ViewScroller.ScrollViewportVerticallyByPixels( -50 );
-            TakeSnapshot2( encoder, view, margin, element );
+            view.VisualElement.UpdateLayout();
+            UpdateLineNumbers( margin );
+            bitmap.Render( element );
+            encoder.Add( bitmap );
         }
-    }
-    private static void TakeSnapshot2(VideoEncoder encoder, IWpfTextView view, IWpfTextViewMargin margin, FrameworkElement element) {
-        ThreadHelper.ThrowIfNotOnUIThread();
-        view.VisualElement.UpdateLayout();
-        UpdateLineNumbers( margin );
-        var renderTargetBitmap = new RenderTargetBitmap( (int) element.ActualWidth, (int) element.ActualHeight, 96, 96, PixelFormats.Pbgra32 );
-        renderTargetBitmap.Render( element );
-        encoder.Add( renderTargetBitmap );
     }
     private static FrameworkElement GetRoot(FrameworkElement element) {
         ThreadHelper.ThrowIfNotOnUIThread();
