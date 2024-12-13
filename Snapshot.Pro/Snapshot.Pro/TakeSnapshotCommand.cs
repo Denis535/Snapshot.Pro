@@ -107,7 +107,16 @@ public class TakeSnapshotCommand : Microsoft.VisualStudio.Extensibility.Commands
             }
         }
         while (view.TextViewLines.LastVisibleLine.End.Position < view.TextSnapshot.Length) {
-            view.ViewScroller.ScrollViewportVerticallyByPixels( -50 );
+            view.ViewScroller.ScrollViewportVerticallyByPixels( -1 );
+            {
+                view.VisualElement.UpdateLayout();
+                UpdateLineNumbers( margin );
+                bitmap.Render( element );
+                encoder.Add( bitmap, converter );
+            }
+        }
+        {
+            view.ViewScroller.ScrollViewportVerticallyByPixels( -1 );
             {
                 view.VisualElement.UpdateLayout();
                 UpdateLineNumbers( margin );
