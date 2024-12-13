@@ -24,7 +24,7 @@ using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.TextManager.Interop;
 
 [VisualStudioContribution]
-internal class TakeSnapshotCommand : Microsoft.VisualStudio.Extensibility.Commands.Command {
+public class TakeSnapshotCommand : Microsoft.VisualStudio.Extensibility.Commands.Command {
 
     private TraceSource Logger { get; }
     private AsyncServiceProviderInjection<DTE, DTE2> DTE { get; }
@@ -68,11 +68,13 @@ internal class TakeSnapshotCommand : Microsoft.VisualStudio.Extensibility.Comman
             var wpfTextView = wpfTextViewHost.TextView ?? throw new NullReferenceException( "IwpfTextView is null" );
             var wpfTextViewMargin = wpfTextViewHost.GetTextViewMargin( PredefinedMarginNames.LineNumber ) ?? throw new NullReferenceException( "IWpfTextViewMargin is null" );
 
-            var path = $"D:/Snapshots/{DateTime.UtcNow.Ticks}-{Path.GetFileNameWithoutExtension( textViewSnapshot.FilePath ).Replace( ".", "_" )}.gif";
+            var path = $"D:/Snapshots/{DateTime.UtcNow.Ticks}-{Path.GetFileNameWithoutExtension( textViewSnapshot.FilePath ).Replace( ".", "_" )}.h264";
             TakeSnapshot( path, wpfTextView, wpfTextViewMargin );
+            Debug.WriteLine( $"Snapshot was saved: " + path );
             await Extensibility.Shell().ShowPromptAsync( $"Snapshot was saved: " + path, PromptOptions.OK, cancellationToken );
         } catch (Exception ex) {
-            Logger.TraceInformation( "Can not save snapshot: " + ex );
+            Debug.WriteLine( ex.ToString() );
+            await Extensibility.Shell().ShowPromptAsync( ex.ToString(), PromptOptions.OK, cancellationToken );
         }
     }
 
@@ -80,12 +82,14 @@ internal class TakeSnapshotCommand : Microsoft.VisualStudio.Extensibility.Comman
         ThreadHelper.ThrowIfNotOnUIThread();
         Directory.CreateDirectory( Path.GetDirectoryName( path ) );
         using (var stream = File.Create( path )) {
-            var encoder = new GifBitmapEncoder();
-            TakeSnapshot( encoder, view, margin );
-            encoder.Save( stream );
+            using (var encoder = new VideoEncoder( stream, 60, 1920, 1080 )) {
+                TakeSnapshot( encoder, view, margin );
+                encoder.Flush();
+            }
+            stream.Flush();
         }
     }
-    private static void TakeSnapshot(BitmapEncoder encoder, IWpfTextView view, IWpfTextViewMargin margin) {
+    private static void TakeSnapshot(VideoEncoder encoder, IWpfTextView view, IWpfTextViewMargin margin) {
         ThreadHelper.ThrowIfNotOnUIThread();
         var element = GetRoot( view.VisualElement );
         {
@@ -95,17 +99,17 @@ internal class TakeSnapshotCommand : Microsoft.VisualStudio.Extensibility.Comman
             TakeSnapshot2( encoder, view, margin, element );
         }
         while (view.TextViewLines.LastVisibleLine.End.Position < view.TextSnapshot.Length) {
-            view.ViewScroller.ScrollViewportVerticallyByPixels( -10 );
+            view.ViewScroller.ScrollViewportVerticallyByPixels( -50 );
             TakeSnapshot2( encoder, view, margin, element );
         }
     }
-    private static void TakeSnapshot2(BitmapEncoder encoder, IWpfTextView view, IWpfTextViewMargin margin, FrameworkElement element) {
+    private static void TakeSnapshot2(VideoEncoder encoder, IWpfTextView view, IWpfTextViewMargin margin, FrameworkElement element) {
         ThreadHelper.ThrowIfNotOnUIThread();
         view.VisualElement.UpdateLayout();
         UpdateLineNumbers( margin );
         var renderTargetBitmap = new RenderTargetBitmap( (int) element.ActualWidth, (int) element.ActualHeight, 96, 96, PixelFormats.Pbgra32 );
         renderTargetBitmap.Render( element );
-        encoder.Frames.Add( BitmapFrame.Create( renderTargetBitmap ) );
+        encoder.Add( renderTargetBitmap );
     }
     private static FrameworkElement GetRoot(FrameworkElement element) {
         ThreadHelper.ThrowIfNotOnUIThread();
