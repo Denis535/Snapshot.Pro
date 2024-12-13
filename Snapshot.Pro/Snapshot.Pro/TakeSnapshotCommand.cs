@@ -84,30 +84,36 @@ public class TakeSnapshotCommand : Microsoft.VisualStudio.Extensibility.Commands
         Directory.CreateDirectory( Path.GetDirectoryName( path ) );
         using (var stream = File.Create( path )) {
             using (var encoder = new VideoEncoder( stream, (int) element.ActualWidth, (int) element.ActualHeight, 60 )) {
-                TakeSnapshot( encoder, element, view, margin );
+                using (var converter = new VideoFrameConverter( (int) element.ActualWidth, (int) element.ActualHeight, (int) element.ActualWidth, (int) element.ActualHeight )) {
+                    TakeSnapshot( encoder, converter, element, view, margin );
+                }
                 encoder.Flush();
             }
             stream.Flush();
         }
     }
-    private static void TakeSnapshot(VideoEncoder encoder, FrameworkElement element, IWpfTextView view, IWpfTextViewMargin margin) {
+    private static void TakeSnapshot(VideoEncoder encoder, VideoFrameConverter converter, FrameworkElement element, IWpfTextView view, IWpfTextViewMargin margin) {
         ThreadHelper.ThrowIfNotOnUIThread();
         var bitmap = new RenderTargetBitmap( (int) element.ActualWidth, (int) element.ActualHeight, 96, 96, PixelFormats.Pbgra32 );
         {
             view.ViewportLeft = 0;
             view.DisplayTextLineContainingBufferPosition( new SnapshotPoint( view.TextSnapshot, 0 ), 0, ViewRelativePosition.Top );
             view.Caret.MoveTo( new SnapshotPoint( view.TextSnapshot, 0 ), PositionAffinity.Predecessor );
-            view.VisualElement.UpdateLayout();
-            UpdateLineNumbers( margin );
-            bitmap.Render( element );
-            encoder.Add( bitmap );
+            {
+                view.VisualElement.UpdateLayout();
+                UpdateLineNumbers( margin );
+                bitmap.Render( element );
+                encoder.Add( bitmap, converter );
+            }
         }
         while (view.TextViewLines.LastVisibleLine.End.Position < view.TextSnapshot.Length) {
             view.ViewScroller.ScrollViewportVerticallyByPixels( -50 );
-            view.VisualElement.UpdateLayout();
-            UpdateLineNumbers( margin );
-            bitmap.Render( element );
-            encoder.Add( bitmap );
+            {
+                view.VisualElement.UpdateLayout();
+                UpdateLineNumbers( margin );
+                bitmap.Render( element );
+                encoder.Add( bitmap, converter );
+            }
         }
     }
     private static FrameworkElement GetRoot(FrameworkElement element) {

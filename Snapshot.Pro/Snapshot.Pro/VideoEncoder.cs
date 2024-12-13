@@ -58,13 +58,13 @@ internal unsafe class VideoEncoder : IDisposable {
         fixed (AVCodecContext** ptr = &codecContext) ffmpeg.avcodec_free_context( ptr );
     }
 
-    public void Add(BitmapSource bitmap) {
+    public void Add(BitmapSource bitmap, VideoFrameConverter converter) {
         var pixels = new byte[ bitmap.PixelWidth * bitmap.PixelHeight * 4 ];
         bitmap.CopyPixels( pixels, bitmap.PixelWidth * 4, 0 );
-        Add( pixels, bitmap.PixelWidth, bitmap.PixelHeight );
+        Add( pixels, bitmap.PixelWidth, bitmap.PixelHeight, converter );
     }
 
-    public void Add(byte[] pixels, int width, int height) {
+    public void Add(byte[] pixels, int width, int height, VideoFrameConverter converter) {
         fixed (byte* pixels_ = pixels) {
             var frame = new AVFrame() {
                 data = new byte_ptr8() {
@@ -76,7 +76,7 @@ internal unsafe class VideoEncoder : IDisposable {
                 width = width,
                 height = height
             };
-            Add( frame );
+            Add( converter.Convert( frame ) );
         }
     }
 
@@ -148,6 +148,68 @@ internal unsafe class VideoEncoder : IDisposable {
                 throw new Exception( error.ToString() );
             }
         }
+    }
+
+}
+internal unsafe class VideoFrameConverter : IDisposable {
+
+    private byte_ptr4 destData;
+    private int4 destLineSize;
+
+    private int SrcWidth { get; }
+    private int SrcHeight { get; }
+    private AVPixelFormat SrcFormat { get; }
+
+    private int DestWidth { get; }
+    private int DestHeight { get; }
+    private AVPixelFormat DestFormat { get; }
+
+    private IntPtr FrameBuffer { get; }
+    private SwsContext* Context { get; }
+
+    private byte_ptr4 DestData => destData;
+    private int4 DestLineSize => destLineSize;
+
+    public VideoFrameConverter(int srcWidth, int srcHeight, int destWidth, int destHeight) : this( srcWidth, srcHeight, AVPixelFormat.AV_PIX_FMT_BGRA, destWidth, destHeight, AVPixelFormat.AV_PIX_FMT_YUV420P ) {
+    }
+    public VideoFrameConverter(int srcWidth, int srcHeight, AVPixelFormat srcFormat, int destWidth, int destHeight, AVPixelFormat destFormat) {
+        SrcWidth = srcWidth;
+        SrcHeight = srcHeight;
+        SrcFormat = srcFormat;
+
+        DestWidth = destWidth;
+        DestHeight = destHeight;
+        DestFormat = destFormat;
+
+        FrameBuffer = Marshal.AllocHGlobal( ffmpeg.av_image_get_buffer_size( destFormat, destWidth, destHeight, 1 ) );
+        Context = ffmpeg.sws_getContext( srcWidth, srcHeight, srcFormat, destWidth, destHeight, destFormat, ffmpeg.SWS_FAST_BILINEAR, null, null, null );
+        if (Context == null) throw new NullReferenceException( "SwsContext is null" );
+
+        destData = new byte_ptr4();
+        destLineSize = new int4();
+        ffmpeg.av_image_fill_arrays( ref destData, ref destLineSize, (byte*) FrameBuffer, destFormat, destWidth, destHeight, 1 );
+    }
+
+    public void Dispose() {
+        ffmpeg.sws_freeContext( Context );
+        Marshal.FreeHGlobal( FrameBuffer );
+    }
+
+    public AVFrame Convert(AVFrame frame) {
+        ffmpeg.sws_scale( Context, frame.data, frame.linesize, 0, frame.height, DestData, DestLineSize );
+
+        var destData = new byte_ptr8();
+        destData.UpdateFrom( DestData );
+
+        var destLineSize = new int8();
+        destLineSize.UpdateFrom( DestLineSize );
+
+        return new AVFrame() {
+            data = destData,
+            linesize = destLineSize,
+            width = DestWidth,
+            height = DestHeight
+        };
     }
 
 }
