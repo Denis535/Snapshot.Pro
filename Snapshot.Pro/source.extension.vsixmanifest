@@ -5,7 +5,7 @@
         <DisplayName>Snapshot.Pro</DisplayName>
         <Description xml:space="preserve">
             The Visual Studio extension for taking a video snapshots (with smooth scrolling).
-            Just press the 'Tools/Take Snapshot' command.
+            To make a snapshot just execute the 'Tools/Take Snapshot' command.
             Note: FFmpeg must be installed in the 'C:\FFmpeg\bin\x64\' path.
         </Description>
         <Icon>Icon.png</Icon>
