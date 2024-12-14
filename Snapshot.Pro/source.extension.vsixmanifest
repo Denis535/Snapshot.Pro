@@ -3,7 +3,11 @@
     <Metadata>
         <Identity Id="Snapshot.Pro.51a382c6-eec9-4059-b517-e9d158d3781b" Version="1.0" Language="en-US" Publisher="Denis535" />
         <DisplayName>Snapshot.Pro</DisplayName>
-        <Description xml:space="preserve">The package provides you with a command to save a snapshot of the window</Description>
+        <Description xml:space="preserve">
+            The Visual Studio extension for taking a video snapshots (with smooth scrolling).
+            Just press the 'Tools/Take Snapshot' command.
+            Note: FFmpeg must be installed in the 'C:\FFmpeg\bin\x64\' path.
+        </Description>
         <Icon>..\Icon.png</Icon>
         <PreviewImage>..\Icon.png</PreviewImage>
     </Metadata>
