@@ -66,6 +66,7 @@ internal unsafe sealed class VideoFrameConverter : IDisposable {
             linesize = destLineSize,
             width = DestWidth,
             height = DestHeight,
+            format = (int) DestFormat,
         };
     }
 

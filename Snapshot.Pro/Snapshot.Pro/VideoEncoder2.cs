@@ -44,6 +44,7 @@ internal unsafe class VideoEncoder2 : IDisposable {
                 },
                 width = bitmap.PixelWidth,
                 height = bitmap.PixelHeight,
+                format = (int) AVPixelFormat.AV_PIX_FMT_BGRA,
                 pts = frame,
                 duration = duration
             };
