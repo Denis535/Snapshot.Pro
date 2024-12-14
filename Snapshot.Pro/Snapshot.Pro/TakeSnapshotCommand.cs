@@ -67,11 +67,13 @@ public class TakeSnapshotCommand : Microsoft.VisualStudio.Extensibility.Commands
             var wpfTextView = wpfTextViewHost.TextView ?? throw new NullReferenceException( "IwpfTextView is null" );
             var wpfTextViewMargin = wpfTextViewHost.GetTextViewMargin( PredefinedMarginNames.LineNumber ) ?? throw new NullReferenceException( "IWpfTextViewMargin is null" );
 
-            var path = $"D:/Snapshots/{DateTime.UtcNow.Ticks}-{Path.GetFileNameWithoutExtension( textViewSnapshot.FilePath ).Replace( ".", "_" )}.h264";
+            var path = $"C:/Snapshot.Pro/{DateTime.UtcNow.Ticks}-{Path.GetFileNameWithoutExtension( textViewSnapshot.FilePath ).Replace( ".", "_" )}.h264";
             var element = GetRoot( wpfTextView.VisualElement );
+            var stopwatch = Stopwatch.StartNew();
             TakeSnapshot( path, element, wpfTextView, wpfTextViewMargin );
-            Debug.WriteLine( $"Snapshot was saved: " + path );
-            await Extensibility.Shell().ShowPromptAsync( $"Snapshot was saved: " + path, PromptOptions.OK, cancellationToken );
+            stopwatch.Stop();
+            Debug.WriteLine( $"Snapshot was saved ({stopwatch.Elapsed.TotalMinutes} total minutes): {path}" );
+            await Extensibility.Shell().ShowPromptAsync( $"Snapshot was saved ({stopwatch.Elapsed.TotalMinutes} total minutes): {path}", PromptOptions.OK, cancellationToken );
         } catch (Exception ex) {
             Debug.WriteLine( ex.ToString() );
             await Extensibility.Shell().ShowPromptAsync( ex.ToString(), PromptOptions.OK, cancellationToken );
@@ -82,16 +84,14 @@ public class TakeSnapshotCommand : Microsoft.VisualStudio.Extensibility.Commands
         ThreadHelper.ThrowIfNotOnUIThread();
         Directory.CreateDirectory( Path.GetDirectoryName( path ) );
         using (var stream = File.Create( path )) {
-            using (var encoder = new VideoEncoder( stream, (int) element.ActualWidth, (int) element.ActualHeight, 60 )) {
-                using (var converter = new VideoFrameConverter( (int) element.ActualWidth, (int) element.ActualHeight, (int) element.ActualWidth, (int) element.ActualHeight )) {
-                    TakeSnapshot( encoder, converter, element, view, margin );
-                }
+            using (var encoder = new VideoEncoder2( stream, (int) element.ActualWidth, (int) element.ActualHeight, 60 )) {
+                TakeSnapshot( encoder, element, view, margin );
                 encoder.Flush();
             }
             stream.Flush();
         }
     }
-    private static void TakeSnapshot(VideoEncoder encoder, VideoFrameConverter converter, FrameworkElement element, IWpfTextView view, IWpfTextViewMargin margin) {
+    private static void TakeSnapshot(VideoEncoder2 encoder, FrameworkElement element, IWpfTextView view, IWpfTextViewMargin margin) {
         ThreadHelper.ThrowIfNotOnUIThread();
         var bitmap = new RenderTargetBitmap( (int) element.ActualWidth, (int) element.ActualHeight, 96, 96, PixelFormats.Pbgra32 );
         {
@@ -99,28 +99,33 @@ public class TakeSnapshotCommand : Microsoft.VisualStudio.Extensibility.Commands
             view.DisplayTextLineContainingBufferPosition( new SnapshotPoint( view.TextSnapshot, 0 ), 0, ViewRelativePosition.Top );
             view.Caret.MoveTo( new SnapshotPoint( view.TextSnapshot, 0 ), PositionAffinity.Predecessor );
         }
-        for (var i = 0; view.TextViewLines.LastVisibleLine.End.Position < view.TextSnapshot.Length; i++) {
-            var delta = (double) i / (60 * 5);
-            delta = Math.Min( delta, 1 );
-            delta = Math.Pow( delta, 1.5f );
-            view.ViewScroller.ScrollViewportVerticallyByPixels( -delta );
-            TakeSnapshot( bitmap, encoder, converter, element, view, margin );
+        var frame = 0;
+        //for (; view.TextViewLines.LastVisibleLine.End.Position < view.TextSnapshot.Length;) {
+        //    //var delta = (double) i / (60 * 5);
+        //    //delta = Math.Min( delta, 1 );
+        //    //delta = Math.Pow( delta, 2 );
+        //    TakeSnapshot( encoder, bitmap, element, frame, 0, view, margin );
+        //    frame++;
+        //    view.ViewScroller.ScrollViewportVerticallyByPixels( -1 );
+        //}
+        for (; frame < 10;) {
+            TakeSnapshot( encoder, bitmap, element, frame * 60, 60, view, margin );
+            frame++;
+            view.ViewScroller.ScrollViewportVerticallyByPixels( -1 );
         }
-        for (var i = 0; i < 60 * 3; i++) {
-            var delta = (double) i / (60 * 5);
-            delta = Math.Min( delta, 1 );
-            delta = Math.Pow( delta, 1.5f );
-            delta = 1 - delta;
-            view.ViewScroller.ScrollViewportVerticallyByPixels( -delta );
-            TakeSnapshot( bitmap, encoder, converter, element, view, margin );
-        }
+        //for (; frame < 60 * 7;) {
+        //    TakeSnapshot( encoder, bitmap, element, frame * 60, 60, view, margin );
+        //    frame++;
+        //}
     }
-    private static void TakeSnapshot(RenderTargetBitmap bitmap, VideoEncoder encoder, VideoFrameConverter converter, FrameworkElement element, IWpfTextView view, IWpfTextViewMargin margin) {
+    private static void TakeSnapshot(VideoEncoder2 encoder, RenderTargetBitmap bitmap, FrameworkElement element, int frame, int duration, IWpfTextView view, IWpfTextViewMargin margin) {
         view.VisualElement.UpdateLayout();
         UpdateLineNumbers( margin );
         bitmap.Render( element );
-        encoder.Add( bitmap, converter );
+        encoder.Add( bitmap, frame, duration );
     }
+
+    // Helpers
     private static FrameworkElement GetRoot(FrameworkElement element) {
         ThreadHelper.ThrowIfNotOnUIThread();
         while (element.GetVisualOrLogicalParent() != null) {
@@ -128,8 +133,6 @@ public class TakeSnapshotCommand : Microsoft.VisualStudio.Extensibility.Commands
         }
         return element;
     }
-
-    // Helpers
     private static void UpdateLineNumbers(IWpfTextViewMargin margin) {
         var method = margin.GetType().GetMethod( "UpdateLineNumbers", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic );
         method.Invoke( margin, [] );
