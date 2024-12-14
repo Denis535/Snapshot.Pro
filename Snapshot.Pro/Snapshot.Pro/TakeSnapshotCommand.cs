@@ -115,7 +115,7 @@ public class TakeSnapshotCommand : Microsoft.VisualStudio.Extensibility.Commands
                 encoder.Add( bitmap, converter );
             }
         }
-        {
+        for (var i = 0; i < view.LineHeight; i++) {
             view.ViewScroller.ScrollViewportVerticallyByPixels( -1 );
             {
                 view.VisualElement.UpdateLayout();
