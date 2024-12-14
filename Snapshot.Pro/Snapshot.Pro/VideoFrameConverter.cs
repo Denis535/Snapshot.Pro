@@ -56,10 +56,10 @@ internal unsafe sealed class VideoFrameConverter : IDisposable {
             this.destData, this.destLineSize );
 
         var destData = new byte_ptr8();
-        destData.UpdateFrom( destData );
+        destData.UpdateFrom( this.destData );
 
         var destLineSize = new int8();
-        destLineSize.UpdateFrom( destLineSize );
+        destLineSize.UpdateFrom( this.destLineSize );
 
         return frame with {
             data = destData,
