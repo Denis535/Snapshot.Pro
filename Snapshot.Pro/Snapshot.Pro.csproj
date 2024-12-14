@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <Version>1.0.1</Version>
+        <Version>1.0.2</Version>
         <Description>The Visual Studio extension for taking a video snapshots (with smooth scrolling).</Description>
         <Authors>Denis535</Authors>
         <Company>Denis535</Company>
@@ -15,12 +15,12 @@
         <VssdkCompatibleExtension>true</VssdkCompatibleExtension>
     </PropertyGroup>
     <ItemGroup>
-      <None Remove="Icon.png" />
+        <None Remove="Icon.png" />
     </ItemGroup>
     <ItemGroup>
-      <Content Include="Icon.png">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </Content>
+        <Content Include="Icon.png">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
     </ItemGroup>
     <ItemGroup>
         <PackageReference Include="FFmpeg.AutoGen.Bindings.DynamicallyLoaded" Version="7.0.0" />

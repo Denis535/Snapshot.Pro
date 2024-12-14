@@ -28,8 +28,8 @@ public class TakeSnapshotCommand : Microsoft.VisualStudio.Extensibility.Commands
 
     private TraceSource Logger { get; }
     private AsyncServiceProviderInjection<DTE, DTE2> DTE { get; }
-    private MefInjection<IVsEditorAdaptersFactoryService> EditorAdaptersFactoryService { get; }
     private AsyncServiceProviderInjection<SVsTextManager, IVsTextManager> TextManager { get; }
+    private MefInjection<IVsEditorAdaptersFactoryService> EditorAdaptersFactoryService { get; }
 
     public override CommandConfiguration CommandConfiguration => new CommandConfiguration( "%Snapshot.Pro.TakeSnapshotCommand.DisplayName%" ) {
         Icon = new CommandIconConfiguration( ImageMoniker.KnownValues.Extension, IconSettings.IconAndText ),
@@ -40,13 +40,13 @@ public class TakeSnapshotCommand : Microsoft.VisualStudio.Extensibility.Commands
         VisualStudioExtensibility extensibility,
         TraceSource logger,
         AsyncServiceProviderInjection<DTE, DTE2> dte,
-        MefInjection<IVsEditorAdaptersFactoryService> editorAdaptersFactoryService,
-        AsyncServiceProviderInjection<SVsTextManager, IVsTextManager> textManager
+        AsyncServiceProviderInjection<SVsTextManager, IVsTextManager> textManager,
+        MefInjection<IVsEditorAdaptersFactoryService> editorAdaptersFactoryService
         ) : base( extensibility ) {
         Logger = logger;
         DTE = dte;
-        EditorAdaptersFactoryService = editorAdaptersFactoryService;
         TextManager = textManager;
+        EditorAdaptersFactoryService = editorAdaptersFactoryService;
     }
 
     public override Task InitializeAsync(CancellationToken cancellationToken) {
@@ -59,11 +59,10 @@ public class TakeSnapshotCommand : Microsoft.VisualStudio.Extensibility.Commands
             var textViewSnapshot = await context.GetActiveTextViewAsync( cancellationToken ) ?? throw new NullReferenceException( "ITextViewSnapshot is null" );
             //var textDocumentSnapshot = view.Document ?? throw new NullReferenceException( "ITextDocumentSnapshot is null" );
 
-            var editorAdaptersFactoryService = await EditorAdaptersFactoryService.GetServiceAsync();
-
             var textManager = await TextManager.GetServiceAsync();
             ErrorHandler.ThrowOnFailure( textManager.GetActiveView( 1, null, out var activeTextView ) );
 
+            var editorAdaptersFactoryService = await EditorAdaptersFactoryService.GetServiceAsync();
             var wpfTextViewHost = editorAdaptersFactoryService.GetWpfTextViewHost( activeTextView ) ?? throw new NullReferenceException( "IWpfTextViewHost is null" );
             var wpfTextView = wpfTextViewHost.TextView ?? throw new NullReferenceException( "IwpfTextView is null" );
             var wpfTextViewMargin = wpfTextViewHost.GetTextViewMargin( PredefinedMarginNames.LineNumber ) ?? throw new NullReferenceException( "IWpfTextViewMargin is null" );
@@ -99,31 +98,28 @@ public class TakeSnapshotCommand : Microsoft.VisualStudio.Extensibility.Commands
             view.ViewportLeft = 0;
             view.DisplayTextLineContainingBufferPosition( new SnapshotPoint( view.TextSnapshot, 0 ), 0, ViewRelativePosition.Top );
             view.Caret.MoveTo( new SnapshotPoint( view.TextSnapshot, 0 ), PositionAffinity.Predecessor );
-            {
-                view.VisualElement.UpdateLayout();
-                UpdateLineNumbers( margin );
-                bitmap.Render( element );
-                encoder.Add( bitmap, converter );
-            }
         }
-        while (view.TextViewLines.LastVisibleLine.End.Position < view.TextSnapshot.Length) {
-            view.ViewScroller.ScrollViewportVerticallyByPixels( -1 );
-            {
-                view.VisualElement.UpdateLayout();
-                UpdateLineNumbers( margin );
-                bitmap.Render( element );
-                encoder.Add( bitmap, converter );
-            }
+        for (var i = 0; view.TextViewLines.LastVisibleLine.End.Position < view.TextSnapshot.Length; i++) {
+            var delta = (double) i / (60 * 5);
+            delta = Math.Min( delta, 1 );
+            delta = Math.Pow( delta, 1.5f );
+            view.ViewScroller.ScrollViewportVerticallyByPixels( -delta );
+            TakeSnapshot( bitmap, encoder, converter, element, view, margin );
         }
-        for (var i = 0; i < view.LineHeight; i++) {
-            view.ViewScroller.ScrollViewportVerticallyByPixels( -1 );
-            {
-                view.VisualElement.UpdateLayout();
-                UpdateLineNumbers( margin );
-                bitmap.Render( element );
-                encoder.Add( bitmap, converter );
-            }
+        for (var i = 0; i < 60 * 3; i++) {
+            var delta = (double) i / (60 * 5);
+            delta = Math.Min( delta, 1 );
+            delta = Math.Pow( delta, 1.5f );
+            delta = 1 - delta;
+            view.ViewScroller.ScrollViewportVerticallyByPixels( -delta );
+            TakeSnapshot( bitmap, encoder, converter, element, view, margin );
         }
+    }
+    private static void TakeSnapshot(RenderTargetBitmap bitmap, VideoEncoder encoder, VideoFrameConverter converter, FrameworkElement element, IWpfTextView view, IWpfTextViewMargin margin) {
+        view.VisualElement.UpdateLayout();
+        UpdateLineNumbers( margin );
+        bitmap.Render( element );
+        encoder.Add( bitmap, converter );
     }
     private static FrameworkElement GetRoot(FrameworkElement element) {
         ThreadHelper.ThrowIfNotOnUIThread();
