@@ -8,8 +8,8 @@
             Just press the 'Tools/Take Snapshot' command.
             Note: FFmpeg must be installed in the 'C:\FFmpeg\bin\x64\' path.
         </Description>
-        <Icon>..\Icon.png</Icon>
-        <PreviewImage>..\Icon.png</PreviewImage>
+        <Icon>Icon.png</Icon>
+        <PreviewImage>Icon.png</PreviewImage>
     </Metadata>
     <Installation ExtensionType="VSSDK+VisualStudio.Extensibility">
         <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[17.9,18.0)">

@@ -5,12 +5,6 @@ VisualStudioVersion = 17.11.35431.28
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Snapshot.Pro", "Snapshot.Pro\Snapshot.Pro.csproj", "{BA17F427-541F-4109-A939-C74947BF6781}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{66D56C87-5F06-42A4-A49C-592261EB8455}"
-	ProjectSection(SolutionItems) = preProject
-		Icon.png = Icon.png
-		LICENSE = LICENSE
-	EndProjectSection
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
