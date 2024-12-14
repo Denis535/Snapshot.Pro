@@ -72,8 +72,8 @@ public class TakeSnapshotCommand : Microsoft.VisualStudio.Extensibility.Commands
             var stopwatch = Stopwatch.StartNew();
             TakeSnapshot( path, element, wpfTextView, wpfTextViewMargin );
             stopwatch.Stop();
-            Debug.WriteLine( $"Snapshot was saved ({stopwatch.Elapsed.TotalMinutes} total minutes): {path}" );
-            await Extensibility.Shell().ShowPromptAsync( $"Snapshot was saved ({stopwatch.Elapsed.TotalMinutes} total minutes): {path}", PromptOptions.OK, cancellationToken );
+            Debug.WriteLine( $"Snapshot was saved ({stopwatch.Elapsed.TotalMinutes} minutes): {path}" );
+            await Extensibility.Shell().ShowPromptAsync( $"Snapshot was saved ({stopwatch.Elapsed.TotalMinutes} minutes): {path}", PromptOptions.OK, cancellationToken );
         } catch (Exception ex) {
             Debug.WriteLine( ex.ToString() );
             await Extensibility.Shell().ShowPromptAsync( ex.ToString(), PromptOptions.OK, cancellationToken );
@@ -100,23 +100,22 @@ public class TakeSnapshotCommand : Microsoft.VisualStudio.Extensibility.Commands
             view.Caret.MoveTo( new SnapshotPoint( view.TextSnapshot, 0 ), PositionAffinity.Predecessor );
         }
         var frame = 0;
-        //for (; view.TextViewLines.LastVisibleLine.End.Position < view.TextSnapshot.Length;) {
-        //    //var delta = (double) i / (60 * 5);
-        //    //delta = Math.Min( delta, 1 );
-        //    //delta = Math.Pow( delta, 2 );
-        //    TakeSnapshot( encoder, bitmap, element, frame, 0, view, margin );
-        //    frame++;
-        //    view.ViewScroller.ScrollViewportVerticallyByPixels( -1 );
-        //}
-        for (; frame < 10;) {
-            TakeSnapshot( encoder, bitmap, element, frame * 60, 60, view, margin );
+        while (view.TextViewLines.LastVisibleLine.End.Position < view.TextSnapshot.Length) {
+            var delta = (double) frame / (60 * 5);
+            delta = Math.Min( delta, 1 );
+            delta = Math.Pow( delta, 2 );
+            TakeSnapshot( encoder, bitmap, element, frame, 0, view, margin );
             frame++;
-            view.ViewScroller.ScrollViewportVerticallyByPixels( -1 );
+            view.ViewScroller.ScrollViewportVerticallyByPixels( -delta );
         }
-        //for (; frame < 60 * 7;) {
-        //    TakeSnapshot( encoder, bitmap, element, frame * 60, 60, view, margin );
-        //    frame++;
-        //}
+        for (var i = 0; i < 60 * 2; i++) {
+            TakeSnapshot( encoder, bitmap, element, frame, 0, view, margin );
+            frame++;
+        }
+        while (frame < 60 * 7) {
+            TakeSnapshot( encoder, bitmap, element, frame, 0, view, margin );
+            frame++;
+        }
     }
     private static void TakeSnapshot(VideoEncoder2 encoder, RenderTargetBitmap bitmap, FrameworkElement element, int frame, int duration, IWpfTextView view, IWpfTextViewMargin margin) {
         view.VisualElement.UpdateLayout();
