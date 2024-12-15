@@ -2,7 +2,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -10,7 +9,7 @@ using System.Threading.Tasks;
 using FFmpeg.AutoGen.Abstractions;
 using FFmpeg.AutoGen.Bindings.DynamicallyLoaded;
 
-internal unsafe sealed class VideoEncoder : IDisposable {
+internal unsafe class VideoEncoder : IDisposable {
 
     private readonly AVCodecContext* context;
 
@@ -40,7 +39,7 @@ internal unsafe sealed class VideoEncoder : IDisposable {
         Context->height = height;
         Context->pix_fmt = format;
         Context->time_base = new AVRational() { num = 1, den = fps };
-        ffmpeg.av_opt_set( Context->priv_data, "preset", "superfast", 0 ); // https://trac.ffmpeg.org/wiki/Encode/H.264
+        ffmpeg.av_opt_set( Context->priv_data, "preset", "veryfast", 0 ); // https://trac.ffmpeg.org/wiki/Encode/H.264
         ffmpeg.av_opt_set( Context->priv_data, "tune", "animation", 0 );
         ffmpeg.av_opt_set( Context->priv_data, "crf", "17", 0 );
 
@@ -51,7 +50,7 @@ internal unsafe sealed class VideoEncoder : IDisposable {
         fixed (AVCodecContext** ptr = &context) ffmpeg.avcodec_free_context( ptr );
     }
 
-    public void Add(Stream stream, AVFrame frame) {
+    public void Encode(Stream stream, AVFrame frame) {
         if (frame.width != Width) throw new ArgumentException( $"Argument 'frame' (width) is invalid" );
         if (frame.height != Height) throw new ArgumentException( $"Argument 'frame' (height) is invalid" );
         if (frame.format != (int) Format) throw new ArgumentException( $"Argument 'frame' (format) is invalid" );

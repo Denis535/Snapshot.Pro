@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using FFmpeg.AutoGen.Abstractions;
 
-internal unsafe sealed class FrameConverter : IDisposable {
+internal unsafe class FrameConverter : IDisposable {
 
     private IntPtr frameBuffer;
     private byte_ptr4 destData;
