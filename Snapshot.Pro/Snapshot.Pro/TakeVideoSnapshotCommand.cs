@@ -94,29 +94,21 @@ public class TakeVideoSnapshotCommand : Microsoft.VisualStudio.Extensibility.Com
     private static void TakeVideoSnapshot(VideoEncoder2 encoder, FrameworkElement element, IWpfTextView view, IWpfTextViewMargin margin) {
         ThreadHelper.ThrowIfNotOnUIThread();
         var bitmap = new RenderTargetBitmap( (int) element.ActualWidth, (int) element.ActualHeight, 96, 96, PixelFormats.Pbgra32 );
-        {
-            view.ViewportLeft = 0;
-            view.DisplayTextLineContainingBufferPosition( new SnapshotPoint( view.TextSnapshot, 0 ), 0, ViewRelativePosition.Top );
-            view.Caret.MoveTo( new SnapshotPoint( view.TextSnapshot, 0 ), PositionAffinity.Predecessor );
-        }
+        view.ViewportLeft = 0;
+        view.DisplayTextLineContainingBufferPosition( new SnapshotPoint( view.TextSnapshot, 0 ), 0, ViewRelativePosition.Top );
+        view.Caret.MoveTo( new SnapshotPoint( view.TextSnapshot, 0 ), PositionAffinity.Predecessor );
+
         var frame = 0;
-        {
-            for (var i = 0; i < 60 * 2; i++) {
-                TakeVideoSnapshot( encoder, bitmap, element, frame, 0, view, margin );
-                frame++;
-            }
-            for (var i = 0; view.TextViewLines.LastVisibleLine.End.Position < view.TextSnapshot.Length; i++) {
-                TakeVideoSnapshot( encoder, bitmap, element, frame, 0, view, margin );
-                frame++;
-                var delta = Math.Min( (double) i / (60 * 2), 1 );
-                view.ViewScroller.ScrollViewportVerticallyByPixels( -delta );
-            }
-            for (var i = 0; i < 60 * 2; i++) {
-                TakeVideoSnapshot( encoder, bitmap, element, frame, 0, view, margin );
-                frame++;
-            }
+        for (var i = 0; i < 60 * 3; i++) {
+            TakeVideoSnapshot( encoder, bitmap, element, frame, 0, view, margin );
+            frame++;
         }
-        while (frame < 60 * 7) {
+        for (var i = 0; view.TextViewLines.LastVisibleLine.End.Position < view.TextSnapshot.Length; i++) {
+            TakeVideoSnapshot( encoder, bitmap, element, frame, 0, view, margin );
+            frame++;
+            view.ViewScroller.ScrollViewportVerticallyByPixels( -Math.Min( (double) i / (60 * 3), 1 ) );
+        }
+        for (var i = 0; i < 60 * 3; i++) {
             TakeVideoSnapshot( encoder, bitmap, element, frame, 0, view, margin );
             frame++;
         }
