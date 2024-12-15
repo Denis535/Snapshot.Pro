@@ -14,16 +14,16 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 
-internal unsafe class VideoRecorder : IDisposable {
+internal unsafe class VideoEncoder : IDisposable {
 
     internal readonly RenderTargetBitmap renderTargetBitmap;
     internal readonly byte[] pixels;
 
     private Stream Stream { get; }
     private FrameConverter Converter { get; }
-    private VideoEncoder Encoder { get; }
+    private VideoEncoderInternal Encoder { get; }
 
-    public VideoRecorder(Stream stream, int width, int height, int fps) {
+    public VideoEncoder(Stream stream, int width, int height, int fps) {
         DynamicallyLoadedBindings.LibrariesPath = Path.Combine( "C:\\FFmpeg", "bin", Environment.Is64BitProcess ? "x64" : "x86" );
         DynamicallyLoadedBindings.ThrowErrorIfFunctionNotFound = true;
         DynamicallyLoadedBindings.Initialize();
@@ -31,7 +31,7 @@ internal unsafe class VideoRecorder : IDisposable {
         pixels = new byte[ width * height * 4 ];
         Stream = stream;
         Converter = new FrameConverter( width, height, AVPixelFormat.AV_PIX_FMT_BGRA, width, height, AVPixelFormat.AV_PIX_FMT_YUV420P );
-        Encoder = new VideoEncoder( width, height, AVPixelFormat.AV_PIX_FMT_YUV420P, fps );
+        Encoder = new VideoEncoderInternal( width, height, AVPixelFormat.AV_PIX_FMT_YUV420P, fps );
     }
 
     public void Dispose() {
@@ -59,7 +59,7 @@ internal unsafe class VideoRecorder : IDisposable {
         }
     }
 
-    private void Add(AVFrame frame) {
+    public void Add(AVFrame frame) {
         Encoder.Encode( Stream, Converter.Convert( frame ) );
     }
 
@@ -68,35 +68,35 @@ internal unsafe class VideoRecorder : IDisposable {
     }
 
 }
-internal static class VideoRecorderExtensions {
+internal static class VideoEncoderExtensions {
 
-    public static void TakeVideoSnapshot(this VideoRecorder recorder, FrameworkElement element, IWpfTextView view, IWpfTextViewMargin margin) {
+    public static void AddVideoSnapshot(this VideoEncoder encoder, FrameworkElement element, IWpfTextView view, IWpfTextViewMargin margin) {
         ThreadHelper.ThrowIfNotOnUIThread();
         view.ViewportLeft = 0;
         view.DisplayTextLineContainingBufferPosition( new SnapshotPoint( view.TextSnapshot, 0 ), 0, ViewRelativePosition.Top );
         view.Caret.MoveTo( new SnapshotPoint( view.TextSnapshot, 0 ), PositionAffinity.Predecessor );
         var frame = 0;
         for (var i = 0; i < 60 * 3; i++) {
-            recorder.TakeSnapshot( element, frame, 0, view, margin );
+            encoder.AddSnapshot( element, frame, 0, view, margin );
             frame++;
         }
         for (var i = 0; view.TextViewLines.LastVisibleLine.End.Position < view.TextSnapshot.Length; i++) {
-            recorder.TakeSnapshot( element, frame, 0, view, margin );
+            encoder.AddSnapshot( element, frame, 0, view, margin );
             frame++;
             view.ViewScroller.ScrollViewportVerticallyByPixels( -Math.Min( (double) i / (60 * 3), 1 ) );
         }
         for (var i = 0; i < 60 * 3; i++) {
-            recorder.TakeSnapshot( element, frame, 0, view, margin );
+            encoder.AddSnapshot( element, frame, 0, view, margin );
             frame++;
         }
     }
 
-    public static void TakeSnapshot(this VideoRecorder recorder, FrameworkElement element, int frame, int duration, IWpfTextView view, IWpfTextViewMargin margin) {
+    public static void AddSnapshot(this VideoEncoder encoder, FrameworkElement element, int frame, int duration, IWpfTextView view, IWpfTextViewMargin margin) {
         ThreadHelper.ThrowIfNotOnUIThread();
         view.VisualElement.UpdateLayout();
         UpdateLineNumbers( margin );
-        recorder.renderTargetBitmap.Render( element );
-        recorder.Add( recorder.renderTargetBitmap, frame, duration );
+        encoder.renderTargetBitmap.Render( element );
+        encoder.Add( encoder.renderTargetBitmap, frame, duration );
     }
 
     // Helpers

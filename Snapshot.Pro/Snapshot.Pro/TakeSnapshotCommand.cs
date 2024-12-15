@@ -7,6 +7,8 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using EnvDTE;
 using EnvDTE80;
 using Microsoft.VisualStudio;
@@ -21,19 +23,19 @@ using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.TextManager.Interop;
 
 [VisualStudioContribution]
-public class TakeVideoSnapshotCommand : Microsoft.VisualStudio.Extensibility.Commands.Command {
+public class TakeSnapshotCommand : Microsoft.VisualStudio.Extensibility.Commands.Command {
 
     private TraceSource Logger { get; }
     private AsyncServiceProviderInjection<DTE, DTE2> DTE { get; }
     private AsyncServiceProviderInjection<SVsTextManager, IVsTextManager> TextManager { get; }
     private MefInjection<IVsEditorAdaptersFactoryService> EditorAdaptersFactoryService { get; }
 
-    public override CommandConfiguration CommandConfiguration => new CommandConfiguration( "%Snapshot.Pro.TakeVideoSnapshotCommand.DisplayName%" ) {
+    public override CommandConfiguration CommandConfiguration => new CommandConfiguration( "%Snapshot.Pro.TakeSnapshotCommand.DisplayName%" ) {
         Icon = new CommandIconConfiguration( ImageMoniker.KnownValues.Extension, IconSettings.IconAndText ),
         Placements = [ CommandPlacement.KnownPlacements.ToolsMenu ],
     };
 
-    public TakeVideoSnapshotCommand(
+    public TakeSnapshotCommand(
         VisualStudioExtensibility extensibility,
         TraceSource logger,
         AsyncServiceProviderInjection<DTE, DTE2> dte,
@@ -64,12 +66,10 @@ public class TakeVideoSnapshotCommand : Microsoft.VisualStudio.Extensibility.Com
             var wpfTextView = wpfTextViewHost.TextView ?? throw new NullReferenceException( "IwpfTextView is null" );
             var wpfTextViewMargin = wpfTextViewHost.GetTextViewMargin( PredefinedMarginNames.LineNumber ) ?? throw new NullReferenceException( "IWpfTextViewMargin is null" );
             {
-                var stopwatch = Stopwatch.StartNew();
-                var path = $"C:/Snapshot.Pro/{DateTime.UtcNow.Ticks}-{Path.GetFileNameWithoutExtension( textViewSnapshot.FilePath ).Replace( ".", "_" )}.h264";
-                TakeVideoSnapshot( path, GetRoot( wpfTextView.VisualElement ), wpfTextView, wpfTextViewMargin );
-                stopwatch.Stop();
-                Debug.WriteLine( $"Snapshot was saved ({stopwatch.Elapsed.TotalMinutes} minutes): {path}" );
-                await Extensibility.Shell().ShowPromptAsync( $"Snapshot was saved ({stopwatch.Elapsed.TotalMinutes} minutes): {path}", PromptOptions.OK, cancellationToken );
+                var path = $"C:/Snapshot.Pro/{DateTime.UtcNow.Ticks}-{Path.GetFileNameWithoutExtension( textViewSnapshot.FilePath ).Replace( ".", "_" )}.png";
+                TakeSnapshot( path, GetRoot( wpfTextView.VisualElement ), wpfTextView, wpfTextViewMargin );
+                Debug.WriteLine( $"Snapshot was saved: {path}" );
+                await Extensibility.Shell().ShowPromptAsync( $"Snapshot was saved: {path}", PromptOptions.OK, cancellationToken );
             }
         } catch (Exception ex) {
             Debug.WriteLine( ex.ToString() );
@@ -77,14 +77,17 @@ public class TakeVideoSnapshotCommand : Microsoft.VisualStudio.Extensibility.Com
         }
     }
 
-    private static void TakeVideoSnapshot(string path, FrameworkElement element, IWpfTextView view, IWpfTextViewMargin margin) {
+    private static void TakeSnapshot(string path, FrameworkElement element, IWpfTextView view, IWpfTextViewMargin margin) {
         ThreadHelper.ThrowIfNotOnUIThread();
         Directory.CreateDirectory( Path.GetDirectoryName( path ) );
         using (var stream = File.Create( path )) {
-            using (var encoder = new VideoEncoder( stream, (int) element.ActualWidth, (int) element.ActualHeight, 60 )) {
-                encoder.AddVideoSnapshot( element, view, margin );
-                encoder.Flush();
+            var encoder = new GifBitmapEncoder();
+            {
+                var bitmap = new RenderTargetBitmap( (int) element.ActualWidth, (int) element.ActualHeight, 96, 96, PixelFormats.Pbgra32 );
+                bitmap.Render( element );
+                encoder.Frames.Add( BitmapFrame.Create( bitmap ) );
             }
+            encoder.Save( stream );
             stream.Flush();
         }
     }
