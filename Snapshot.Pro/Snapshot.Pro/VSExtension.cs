@@ -6,7 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.Extensibility;
 
 [VisualStudioContribution]
-public class Extension2 : Extension {
+public class VSExtension : Extension {
 
     public override ExtensionConfiguration ExtensionConfiguration => new ExtensionConfiguration() {
         RequiresInProcessHosting = true,
