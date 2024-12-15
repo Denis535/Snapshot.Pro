@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
     <Metadata>
-        <Identity Id="Snapshot.Pro.51a382c6-eec9-4059-b517-e9d158d3781c" Version="1.0.5" Language="en-US" Publisher="Denis535" />
+        <Identity Id="Snapshot.Pro.51a382c6-eec9-4059-b517-e9d158d3781c" Version="1.0.6" Language="en-US" Publisher="Denis535" />
         <DisplayName>Snapshot.Pro</DisplayName>
         <Description xml:space="preserve">
-            The Visual Studio extension that takes a snapshot of the entire window.
+            This is a Visual Studio extension that allows you to take a screenshot of the entire window.
             
-            And it also records a video of the entire window (with smooth scrolling).
+            It also allows you to record a video of the entire window (with smooth scrolling).
             
             To take a snapshot just execute the 'Tools/Take Snapshot' command.
             
-            To take a video snapshot just execute the 'Tools/Take Video Snapshot' command.
+            To record a video snapshot just execute the 'Tools/Take Video Snapshot' command.
             
             Example: https://youtu.be/lkr5mEreT70
             

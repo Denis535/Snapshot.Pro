@@ -81,7 +81,7 @@ public class TakeSnapshotCommand : Microsoft.VisualStudio.Extensibility.Commands
         ThreadHelper.ThrowIfNotOnUIThread();
         Directory.CreateDirectory( Path.GetDirectoryName( path ) );
         using (var stream = File.Create( path )) {
-            var encoder = new GifBitmapEncoder();
+            var encoder = new PngBitmapEncoder();
             {
                 var bitmap = new RenderTargetBitmap( (int) element.ActualWidth, (int) element.ActualHeight, 96, 96, PixelFormats.Pbgra32 );
                 bitmap.Render( element );
