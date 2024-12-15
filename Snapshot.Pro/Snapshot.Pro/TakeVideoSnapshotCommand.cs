@@ -97,7 +97,6 @@ public class TakeVideoSnapshotCommand : Microsoft.VisualStudio.Extensibility.Com
         view.ViewportLeft = 0;
         view.DisplayTextLineContainingBufferPosition( new SnapshotPoint( view.TextSnapshot, 0 ), 0, ViewRelativePosition.Top );
         view.Caret.MoveTo( new SnapshotPoint( view.TextSnapshot, 0 ), PositionAffinity.Predecessor );
-
         var frame = 0;
         for (var i = 0; i < 60 * 3; i++) {
             TakeVideoSnapshot( encoder, bitmap, element, frame, 0, view, margin );
