@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <Version>1.0.3</Version>
+        <Version>1.0.4</Version>
         <Description>The Visual Studio extension that is recording a video of the entire window (with smooth scrolling).</Description>
         <Authors>Denis535</Authors>
         <Company>Denis535</Company>
