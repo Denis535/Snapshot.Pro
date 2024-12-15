@@ -40,7 +40,9 @@ internal unsafe sealed class VideoEncoder : IDisposable {
         Context->height = height;
         Context->pix_fmt = format;
         Context->time_base = new AVRational() { num = 1, den = fps };
-        ffmpeg.av_opt_set( Context->priv_data, "preset", "veryslow", 0 );
+        ffmpeg.av_opt_set( Context->priv_data, "preset", "medium", 0 ); // https://trac.ffmpeg.org/wiki/Encode/H.264
+        ffmpeg.av_opt_set( Context->priv_data, "tune", "stillimage", 0 );
+        ffmpeg.av_opt_set( Context->priv_data, "crf", "15", 0 );
 
         ThrowIfError( ffmpeg.avcodec_open2( Context, codec, null ) );
     }

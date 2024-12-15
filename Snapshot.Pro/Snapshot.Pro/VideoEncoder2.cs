@@ -14,7 +14,7 @@ internal unsafe class VideoEncoder2 : IDisposable {
     private readonly byte[] pixels;
 
     private Stream Stream { get; }
-    private VideoFrameConverter VideoFrameConverter { get; }
+    private FrameConverter VideoFrameConverter { get; }
     private VideoEncoder VideoEncoder { get; }
 
     public VideoEncoder2(Stream stream, int width, int height, int fps) {
@@ -23,7 +23,7 @@ internal unsafe class VideoEncoder2 : IDisposable {
         DynamicallyLoadedBindings.Initialize();
         pixels = new byte[ width * height * 4 ];
         Stream = stream;
-        VideoFrameConverter = new VideoFrameConverter( width, height, AVPixelFormat.AV_PIX_FMT_BGRA, width, height, AVPixelFormat.AV_PIX_FMT_YUV420P );
+        VideoFrameConverter = new FrameConverter( width, height, AVPixelFormat.AV_PIX_FMT_BGRA, width, height, AVPixelFormat.AV_PIX_FMT_YUV420P );
         VideoEncoder = new VideoEncoder( width, height, AVPixelFormat.AV_PIX_FMT_YUV420P, fps );
     }
 

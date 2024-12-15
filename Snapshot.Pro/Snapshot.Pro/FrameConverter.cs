@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using FFmpeg.AutoGen.Abstractions;
 
-internal unsafe sealed class VideoFrameConverter : IDisposable {
+internal unsafe sealed class FrameConverter : IDisposable {
 
     private IntPtr frameBuffer;
     private byte_ptr4 destData;
@@ -23,7 +23,7 @@ internal unsafe sealed class VideoFrameConverter : IDisposable {
 
     private SwsContext* Context { get; }
 
-    public VideoFrameConverter(int srcWidth, int srcHeight, AVPixelFormat srcFormat, int destWidth, int destHeight, AVPixelFormat destFormat) {
+    public FrameConverter(int srcWidth, int srcHeight, AVPixelFormat srcFormat, int destWidth, int destHeight, AVPixelFormat destFormat) {
         frameBuffer = Marshal.AllocHGlobal( ffmpeg.av_image_get_buffer_size( destFormat, destWidth, destHeight, 1 ) );
         destData = new byte_ptr4();
         destLineSize = new int4();
