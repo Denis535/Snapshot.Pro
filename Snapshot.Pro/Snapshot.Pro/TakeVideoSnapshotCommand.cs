@@ -68,12 +68,10 @@ public class TakeVideoSnapshotCommand : Microsoft.VisualStudio.Extensibility.Com
                 var path = $"C:/Snapshot.Pro/{DateTime.UtcNow.Ticks}-{Path.GetFileNameWithoutExtension( textViewSnapshot.FilePath ).Replace( ".", "_" )}.h264";
                 TakeVideoSnapshot( path, GetRoot( wpfTextView.VisualElement ), wpfTextView, wpfTextViewMargin );
                 stopwatch.Stop();
-                Debug.WriteLine( $"Snapshot was saved ({stopwatch.Elapsed.TotalMinutes} minutes): {path}" );
-                await Extensibility.Shell().ShowPromptAsync( $"Snapshot was saved ({stopwatch.Elapsed.TotalMinutes} minutes): {path}", PromptOptions.OK, cancellationToken );
+                await ShowMessageAsync( $"Snapshot was saved: " + path + Environment.NewLine + $"Execution time {stopwatch.Elapsed.TotalMinutes} minutes", cancellationToken );
             }
         } catch (Exception ex) {
-            Debug.WriteLine( ex.ToString() );
-            await Extensibility.Shell().ShowPromptAsync( ex.ToString(), PromptOptions.OK, cancellationToken );
+            await ShowMessageAsync( ex.ToString(), cancellationToken );
         }
     }
 
@@ -90,6 +88,11 @@ public class TakeVideoSnapshotCommand : Microsoft.VisualStudio.Extensibility.Com
     }
 
     // Helpers
+    private Task ShowMessageAsync(string message, CancellationToken cancellationToken) {
+        Debug.WriteLine( message );
+        Logger.TraceInformation( message );
+        return Extensibility.Shell().ShowPromptAsync( message, PromptOptions.OK, cancellationToken );
+    }
     private static FrameworkElement GetRoot(FrameworkElement element) {
         ThreadHelper.ThrowIfNotOnUIThread();
         while (element.GetVisualOrLogicalParent() != null) {

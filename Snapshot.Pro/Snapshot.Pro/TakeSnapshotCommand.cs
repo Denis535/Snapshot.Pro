@@ -68,12 +68,10 @@ public class TakeSnapshotCommand : Microsoft.VisualStudio.Extensibility.Commands
             {
                 var path = $"C:/Snapshot.Pro/{DateTime.UtcNow.Ticks}-{Path.GetFileNameWithoutExtension( textViewSnapshot.FilePath ).Replace( ".", "_" )}.png";
                 TakeSnapshot( path, GetRoot( wpfTextView.VisualElement ), wpfTextView, wpfTextViewMargin );
-                Debug.WriteLine( $"Snapshot was saved: {path}" );
-                await Extensibility.Shell().ShowPromptAsync( $"Snapshot was saved: {path}", PromptOptions.OK, cancellationToken );
+                await ShowMessageAsync( $"Snapshot was saved: " + path, cancellationToken );
             }
         } catch (Exception ex) {
-            Debug.WriteLine( ex.ToString() );
-            await Extensibility.Shell().ShowPromptAsync( ex.ToString(), PromptOptions.OK, cancellationToken );
+            await ShowMessageAsync( ex.ToString(), cancellationToken );
         }
     }
 
@@ -93,6 +91,11 @@ public class TakeSnapshotCommand : Microsoft.VisualStudio.Extensibility.Commands
     }
 
     // Helpers
+    private Task ShowMessageAsync(string message, CancellationToken cancellationToken) {
+        Debug.WriteLine( message );
+        Logger.TraceInformation( message );
+        return Extensibility.Shell().ShowPromptAsync( message, PromptOptions.OK, cancellationToken );
+    }
     private static FrameworkElement GetRoot(FrameworkElement element) {
         ThreadHelper.ThrowIfNotOnUIThread();
         while (element.GetVisualOrLogicalParent() != null) {
