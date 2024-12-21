@@ -68,7 +68,10 @@ public class TakeVideoSnapshotCommand : Microsoft.VisualStudio.Extensibility.Com
                 var path = $"C:/Snapshot.Pro/{DateTime.UtcNow.Ticks}-{Path.GetFileNameWithoutExtension( textViewSnapshot.FilePath ).Replace( ".", "_" )}.h264";
                 TakeVideoSnapshot( path, GetRoot( wpfTextView.VisualElement ), wpfTextView, wpfTextViewMargin );
                 stopwatch.Stop();
-                await ShowMessageAsync( $"Snapshot was saved: " + path + Environment.NewLine + $"Execution time: " + stopwatch.Elapsed.TotalMinutes, cancellationToken );
+                await ShowMessageAsync(
+                    "Video was saved: " + path + Environment.NewLine +
+                    "Execution time: " + stopwatch.Elapsed.TotalMinutes,
+                    cancellationToken );
             }
         } catch (Exception ex) {
             await ShowMessageAsync( ex.ToString(), cancellationToken );

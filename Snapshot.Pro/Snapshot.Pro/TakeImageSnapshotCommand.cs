@@ -21,19 +21,19 @@ using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.TextManager.Interop;
 
 [VisualStudioContribution]
-public class TakeSnapshotCommand : Microsoft.VisualStudio.Extensibility.Commands.Command {
+public class TakeImageSnapshotCommand : Microsoft.VisualStudio.Extensibility.Commands.Command {
 
     private TraceSource Logger { get; }
     private AsyncServiceProviderInjection<DTE, DTE2> DTE { get; }
     private AsyncServiceProviderInjection<SVsTextManager, IVsTextManager> TextManager { get; }
     private MefInjection<IVsEditorAdaptersFactoryService> EditorAdaptersFactoryService { get; }
 
-    public override CommandConfiguration CommandConfiguration => new CommandConfiguration( "%Snapshot.Pro.TakeSnapshotCommand.DisplayName%" ) {
+    public override CommandConfiguration CommandConfiguration => new CommandConfiguration( "%Snapshot.Pro.TakeImageSnapshotCommand.DisplayName%" ) {
         Icon = new CommandIconConfiguration( ImageMoniker.KnownValues.Extension, IconSettings.IconAndText ),
         Placements = [ CommandPlacement.KnownPlacements.ToolsMenu ],
     };
 
-    public TakeSnapshotCommand(
+    public TakeImageSnapshotCommand(
         VisualStudioExtensibility extensibility,
         TraceSource logger,
         AsyncServiceProviderInjection<DTE, DTE2> dte,
@@ -66,7 +66,9 @@ public class TakeSnapshotCommand : Microsoft.VisualStudio.Extensibility.Commands
             {
                 var path = $"C:/Snapshot.Pro/{DateTime.UtcNow.Ticks}-{Path.GetFileNameWithoutExtension( textViewSnapshot.FilePath ).Replace( ".", "_" )}.png";
                 TakeSnapshot( path, GetRoot( wpfTextView.VisualElement ), wpfTextView, wpfTextViewMargin );
-                await ShowMessageAsync( $"Snapshot was saved: " + path, cancellationToken );
+                await ShowMessageAsync(
+                    $"Image was saved: " + path,
+                    cancellationToken );
             }
         } catch (Exception ex) {
             await ShowMessageAsync( ex.ToString(), cancellationToken );

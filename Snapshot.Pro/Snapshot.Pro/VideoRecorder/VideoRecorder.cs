@@ -2,6 +2,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
@@ -22,10 +23,14 @@ internal unsafe class VideoRecorder : IDisposable {
     private FrameConverter Converter { get; }
     private VideoEncoder Encoder { get; }
 
-    public VideoRecorder(string path, int width, int height, int fps) {
-        DynamicallyLoadedBindings.LibrariesPath = Path.Combine( "C:\\FFmpeg", "bin", Environment.Is64BitProcess ? "x64" : "x86" );
+    static VideoRecorder() {
+        DynamicallyLoadedBindings.LibrariesPath = Path.Combine( Path.GetDirectoryName( typeof( VideoRecorder ).Assembly.Location ), "FFmpeg", "bin", Environment.Is64BitProcess ? "x64" : "x86" );
+        Debug.WriteLine( "FFmpeg: " + DynamicallyLoadedBindings.LibrariesPath );
         DynamicallyLoadedBindings.ThrowErrorIfFunctionNotFound = true;
         DynamicallyLoadedBindings.Initialize();
+    }
+
+    public VideoRecorder(string path, int width, int height, int fps) {
         renderTargetBitmap = new RenderTargetBitmap( width, height, 96, 96, PixelFormats.Pbgra32 );
         pixels = new byte[ width * height * 4 ];
         Stream = File.Create( path );

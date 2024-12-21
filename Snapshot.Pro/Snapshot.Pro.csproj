@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <Version>1.0.6</Version>
-        <Description>This is a Visual Studio extension that allows you to take a snapshot of the entire window.</Description>
+        <Version>1.0.7</Version>
+        <Description>This is a Visual Studio extension that allows you to take a (image/video) snapshot of the entire window.</Description>
         <Authors>Denis535</Authors>
         <Company>Denis535</Company>
         <Product>$(AssemblyName)</Product>
@@ -15,11 +15,43 @@
         <VssdkCompatibleExtension>true</VssdkCompatibleExtension>
     </PropertyGroup>
     <ItemGroup>
+        <None Remove="FFmpeg\bin\x64\avcodec-61.dll" />
+        <None Remove="FFmpeg\bin\x64\avdevice-61.dll" />
+        <None Remove="FFmpeg\bin\x64\avfilter-10.dll" />
+        <None Remove="FFmpeg\bin\x64\avformat-61.dll" />
+        <None Remove="FFmpeg\bin\x64\avutil-59.dll" />
+        <None Remove="FFmpeg\bin\x64\postproc-58.dll" />
+        <None Remove="FFmpeg\bin\x64\swresample-5.dll" />
+        <None Remove="FFmpeg\bin\x64\swscale-8.dll" />
         <None Remove="Icon.png" />
     </ItemGroup>
     <ItemGroup>
+        <Content Include="FFmpeg\bin\x64\avcodec-61.dll">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <Content Include="FFmpeg\bin\x64\avdevice-61.dll">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <Content Include="FFmpeg\bin\x64\avfilter-10.dll">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <Content Include="FFmpeg\bin\x64\avformat-61.dll">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <Content Include="FFmpeg\bin\x64\avutil-59.dll">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <Content Include="FFmpeg\bin\x64\postproc-58.dll">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <Content Include="FFmpeg\bin\x64\swresample-5.dll">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
+        <Content Include="FFmpeg\bin\x64\swscale-8.dll">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </Content>
         <Content Include="Icon.png">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
         </Content>
     </ItemGroup>
     <ItemGroup>

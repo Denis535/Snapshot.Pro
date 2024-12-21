@@ -1,22 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
     <Metadata>
-        <Identity Id="Snapshot.Pro.51a382c6-eec9-4059-b517-e9d158d3781c" Version="1.0.6" Language="en-US" Publisher="Denis535" />
+        <Identity Id="Snapshot.Pro.51a382c6-eec9-4059-b517-e9d158d3781c" Version="1.0.7" Language="en-US" Publisher="Denis535" />
         <DisplayName>Snapshot.Pro</DisplayName>
         <Description xml:space="preserve">
-            This is a Visual Studio extension that allows you to take a snapshot of the entire window.
+            This is a Visual Studio extension that allows you to take a (image/video) snapshot of the entire window.
             
-            It also allows you to record a video of the entire window (with smooth scrolling).
+            To take a image snapshot, execute the 'Tools/Take Image Snapshot' command.
             
-            To take a snapshot, execute the 'Tools/Take Snapshot' command.
+            To take a video snapshot, execute the 'Tools/Take Video Snapshot' command.
             
-            To record a video, execute the 'Tools/Take Video Snapshot' command.
-            
-            The example: https://youtu.be/lkr5mEreT70
-            
-            Note: the FFmpeg 7.0 must be installed in the 'C:\FFmpeg\bin\x64\' path.
-            
-            Note: you can download FFmpeg 7.0 from the https://github.com/Ruslan-B/FFmpeg.AutoGen/releases/tag/v7.0 link.
+            The video sample: https://youtu.be/lkr5mEreT70
         </Description>
         <Icon>Icon.png</Icon>
         <PreviewImage>Icon.png</PreviewImage>
