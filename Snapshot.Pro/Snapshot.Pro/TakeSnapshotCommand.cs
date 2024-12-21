@@ -7,8 +7,6 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using EnvDTE;
 using EnvDTE80;
 using Microsoft.VisualStudio;
@@ -78,15 +76,8 @@ public class TakeSnapshotCommand : Microsoft.VisualStudio.Extensibility.Commands
     private static void TakeSnapshot(string path, FrameworkElement element, IWpfTextView view, IWpfTextViewMargin margin) {
         ThreadHelper.ThrowIfNotOnUIThread();
         Directory.CreateDirectory( Path.GetDirectoryName( path ) );
-        using (var stream = File.Create( path )) {
-            var encoder = new PngBitmapEncoder();
-            {
-                var bitmap = new RenderTargetBitmap( (int) element.ActualWidth, (int) element.ActualHeight, 96, 96, PixelFormats.Pbgra32 );
-                bitmap.Render( element );
-                encoder.Frames.Add( BitmapFrame.Create( bitmap ) );
-            }
-            encoder.Save( stream );
-            stream.Flush();
+        using (var recorder = new ImageRecorder( path, (int) element.ActualWidth, (int) element.ActualHeight )) {
+            recorder.AddSnapshot( element );
         }
     }
 

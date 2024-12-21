@@ -68,7 +68,7 @@ public class TakeVideoSnapshotCommand : Microsoft.VisualStudio.Extensibility.Com
                 var path = $"C:/Snapshot.Pro/{DateTime.UtcNow.Ticks}-{Path.GetFileNameWithoutExtension( textViewSnapshot.FilePath ).Replace( ".", "_" )}.h264";
                 TakeVideoSnapshot( path, GetRoot( wpfTextView.VisualElement ), wpfTextView, wpfTextViewMargin );
                 stopwatch.Stop();
-                await ShowMessageAsync( $"Snapshot was saved: " + path + Environment.NewLine + $"Execution time {stopwatch.Elapsed.TotalMinutes} minutes", cancellationToken );
+                await ShowMessageAsync( $"Snapshot was saved: " + path + Environment.NewLine + $"Execution time: " + stopwatch.Elapsed.TotalMinutes, cancellationToken );
             }
         } catch (Exception ex) {
             await ShowMessageAsync( ex.ToString(), cancellationToken );
@@ -78,12 +78,8 @@ public class TakeVideoSnapshotCommand : Microsoft.VisualStudio.Extensibility.Com
     private static void TakeVideoSnapshot(string path, FrameworkElement element, IWpfTextView view, IWpfTextViewMargin margin) {
         ThreadHelper.ThrowIfNotOnUIThread();
         Directory.CreateDirectory( Path.GetDirectoryName( path ) );
-        using (var stream = File.Create( path )) {
-            using (var encoder = new VideoEncoder( stream, (int) element.ActualWidth, (int) element.ActualHeight, 60 )) {
-                encoder.AddVideoSnapshot( element, view, margin );
-                encoder.Flush();
-            }
-            stream.Flush();
+        using (var recorder = new VideoRecorder( path, (int) element.ActualWidth, (int) element.ActualHeight, 60 )) {
+            recorder.AddVideoSnapshot( element, view, margin );
         }
     }
 
