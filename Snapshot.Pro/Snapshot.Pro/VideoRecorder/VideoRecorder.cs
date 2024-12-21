@@ -25,7 +25,7 @@ internal unsafe class VideoRecorder : IDisposable {
 
     static VideoRecorder() {
         DynamicallyLoadedBindings.LibrariesPath = Path.Combine( Path.GetDirectoryName( typeof( VideoRecorder ).Assembly.Location ), "FFmpeg", "bin", Environment.Is64BitProcess ? "x64" : "x86" );
-        Debug.WriteLine( "FFmpeg: " + DynamicallyLoadedBindings.LibrariesPath );
+        //Debug.WriteLine( "FFmpeg: " + DynamicallyLoadedBindings.LibrariesPath );
         DynamicallyLoadedBindings.ThrowErrorIfFunctionNotFound = true;
         DynamicallyLoadedBindings.Initialize();
     }

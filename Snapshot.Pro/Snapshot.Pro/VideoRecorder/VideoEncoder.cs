@@ -7,7 +7,6 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using FFmpeg.AutoGen.Abstractions;
-using FFmpeg.AutoGen.Bindings.DynamicallyLoaded;
 
 internal unsafe class VideoEncoder : IDisposable {
 
@@ -21,10 +20,6 @@ internal unsafe class VideoEncoder : IDisposable {
     private AVCodecContext* Context { get => context; init => context = value; }
 
     public VideoEncoder(int width, int height, AVPixelFormat format, int fps) {
-        DynamicallyLoadedBindings.LibrariesPath = Path.Combine( "C:\\FFmpeg", "bin", Environment.Is64BitProcess ? "x64" : "x86" );
-        DynamicallyLoadedBindings.ThrowErrorIfFunctionNotFound = true;
-        DynamicallyLoadedBindings.Initialize();
-
         Width = width;
         Height = height;
         Format = format;
