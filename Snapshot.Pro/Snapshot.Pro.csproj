@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <Version>1.0.7</Version>
-        <Description>This is a Visual Studio extension that allows you to take a (image/video) snapshot of the entire window.</Description>
+        <Description>This is a Visual Studio extension that allows you to take a (image / video) snapshot of the entire window.</Description>
         <Authors>Denis535</Authors>
         <Company>Denis535</Company>
         <Product>$(AssemblyName)</Product>

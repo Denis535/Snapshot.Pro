@@ -4,9 +4,9 @@
         <Identity Id="Snapshot.Pro.51a382c6-eec9-4059-b517-e9d158d3781c" Version="1.0.7" Language="en-US" Publisher="Denis535" />
         <DisplayName>Snapshot.Pro</DisplayName>
         <Description xml:space="preserve">
-            This is a Visual Studio extension that allows you to take a (image/video) snapshot of the entire window.
+            This is a Visual Studio extension that allows you to take a (image / video) snapshot of the entire window.
             
-            To take a image snapshot, execute the 'Tools/Take Image Snapshot' command.
+            To take an image snapshot, execute the 'Tools/Take Image Snapshot' command.
             
             To take a video snapshot, execute the 'Tools/Take Video Snapshot' command.
             
